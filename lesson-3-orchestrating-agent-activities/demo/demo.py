@@ -1,11 +1,12 @@
 from typing import Dict, List, Any, Optional
 import os
-import dotenv
+from dotenv import load_dotenv
 from smolagents import ToolCallingAgent, OpenAIServerModel, tool
 import re
 import json
 
-dotenv.load_dotenv(dotenv_path="../.env")
+#dotenv.load_dotenv(dotenv_path="../.env")
+load_dotenv()
 openai_api_key = os.getenv("UDACITY_OPENAI_API_KEY")
 
 model = OpenAIServerModel(

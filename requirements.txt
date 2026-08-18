@@ -1,5 +1,10 @@
 matplotlib
 networkx
-smolagents
+smolagents[openai]
+openai
 numpy
-sklearn
+scikit-learn
+pandas
+python-dotenv
+
+

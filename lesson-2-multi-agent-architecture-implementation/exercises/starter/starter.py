@@ -74,7 +74,13 @@ def find_food(method: str) -> int:
     food_found = 0
     
     # YOUR CODE HERE
-    
+    method = method.lower()
+    if method =="foraging":
+        food_found=random.randint(0,3)
+    elif method =="fishing":
+        food_found=random.randint(2,7)
+    else:
+        food_found = 0
     return food_found
 
 
@@ -206,11 +212,14 @@ class PenguinAgent(ToolCallingAgent):
         # - Encourage smart decision-making based on current state
         
         Choose ONE action:
-        1. FIND FOOD YOURSELF: Use 'find_food' tool with method="fishing" or method="foraging"
-        2. REQUEST FOOD: Respond with text asking for food
-        3. REQUEST TOY: Respond with text asking for a toy
+        1. FIND FOOD: Call the 'find_food' tool. You MUST provide 'penguin_name' (which is "{self.name}") and 'method' ("fishing" or "foraging").
+        2. REQUEST FOOD: If you want to ask food from the scientist, respond with short text message ("e.g.I need food"). Do not use any tool.
+        3. REQUEST TOY: If you want to ask for a toy from the scientist, respond with short text message (e.g. "I could use a toy). Do not use any tool.
         
         YOUR ADDITIONAL GUIDANCE HERE
+        You MUST call exactly one tool. Never respond with plain text outside a tool call.
+        Prefer finding food yourself (fishing/foraging) when you have low food; request from the
+        scientist only when self-sufficiency isn't enough or you want a toy.
         """
         
         final_llm_text_output = self.run(prompt)

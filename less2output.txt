@@ -1,0 +1,18 @@
+
+
+
+        1. FIND FOOD YOURSELF: Use 'find_food' tool with method="fishing" or method="foraging", 
+        use your name {self.name} and method ("fishing" or "foraging"). After finding food, update with "I found food myself".
+        2. REQUEST FOOD:Request food from scientist and respond with text "I am hungry and need food", 
+        after this update your state with "I requested food from the scientist." Do not use tool.
+        3. REQUEST TOY: Respond with text asking for a toy from scientist with text "I need toy" , 
+        after this update your state with "I requested a toy from the scientist." Do not use tool.
+
+
+        You are {self.name}. Your current state is: Food: {self.food}, Has Toy: {self.has_toy}.
+        Choose ONE action:
+        1. FIND FOOD: Use the 'find_food' tool. You MUST provide 'penguin_name' (which is "{self.name}") and 'method' ("fishing" or "foraging").
+           After the tool is used by the system, your final response should be simple, like "Okay, I went searching."
+        2. REQUEST FOOD: If you want to ask the scientist for food, respond with a short text message (e.g., "I am hungry and need food."). Do NOT use any tool.
+        3. REQUEST TOY: If you want to ask the scientist for a TOY, respond with a short text message (e.g., "I could use a tool."). Do NOT use any tool.
+        """

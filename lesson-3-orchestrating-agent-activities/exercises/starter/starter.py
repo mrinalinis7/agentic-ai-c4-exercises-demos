@@ -1,6 +1,6 @@
 from typing import Dict, List, Any, Optional
 import os
-import dotenv
+import dotenv 
 from smolagents import ToolCallingAgent, OpenAIServerModel, tool
 import re
 import json
@@ -165,8 +165,12 @@ def create_new_event(event_name: str, date: str, description: str) -> str:
     # 1. Call event_system.add_event(event_name, date, description)
     # 2. If successful (returns True), return a confirmation message
     # 3. If it fails (unlikely with current implementation), return failure message
-    # Example: return f"Event '{event_name}' on {date} successfully created: {description}."
-    pass
+    # Example: return f"Event '{event_name}' on {date} successfully created: {description}." 
+    if event_system.add_event(event_name,date, description):
+        return f"Event '{event_name}' on {date} successfully created: {description}."
+    else:
+        return f"Failed to create event '{event_name}' on {date}."
+
 
 # ========================================
 # STUDENT TASK 2: Implement list_upcoming_events tool
@@ -184,7 +188,11 @@ def list_upcoming_events() -> str:
     # 1. Call event_system.list_events() to get all events
     # 2. If the list is empty, return "No upcoming events are currently scheduled."
     # 3. Otherwise, return the events as JSON: f"Upcoming events: {json.dumps(events)}"
-    pass
+    events = event_system.list_events()
+    if len(events) == 0:
+        return "No upcoming events are currently scheduled."
+    else:
+        return f"Upcoming events: {json.dumps(events)}"
 
 # ========================================
 # STUDENT TASK 3: Implement log_maintenance_request tool
@@ -208,7 +216,8 @@ def log_maintenance_request(area: str, issue_description: str, reported_by: str)
     # 2. This returns a request_id (int)
     # 3. Return a confirmation message that includes all the information
     # Example: f"Maintenance request logged for '{area}' (Issue: '{issue_description}', Reported by: {reported_by}). Request ID: {request_id}."
-    pass
+    request_id = maintenance_log.add_entry(area, issue_description, reported_by)
+    return f"Maintenance request logged for '{area}' (Issue: '{issue_description}', Reported by: {reported_by}). Request ID: {request_id}."
 
 # ========================================
 # STUDENT TASK 4: Implement view_maintenance_log tool
@@ -226,7 +235,11 @@ def view_maintenance_log() -> str:
     # 1. Call maintenance_log.view_log() to get all log entries
     # 2. If the list is empty, return "The maintenance log is currently empty."
     # 3. Otherwise, return the log as JSON: f"Maintenance Log: {json.dumps(log)}"
-    pass
+    log = maintenance_log.view_log() 
+    if len(log) ==0:
+        return "The maintenance log is currently empty."
+    else:
+        return f"Maintenance Log: {json.dumps(log)}"
 
 @tool
 def submit_request_diagnosis(chosen_category: str, original_request_for_context: str) -> str:
@@ -331,7 +344,11 @@ class Orchestrator(ToolCallingAgent):
         # ========================================
         # The prompt below handles categories 0-3 and 6
         # You need to add handling for categories 4 and 5 in the marked section
-        
+
+        # [YOUR GUIDANCE HERE - Guide the LLM on when to use 'list_upcoming_events' vs 'create_new_event']
+        #[Consider what information is needed for each tool]
+        #[YOUR GUIDANCE HERE - Guide the LLM on when to use 'log_maintenance_request' vs 'view_maintenance_log']
+        #[Consider what arguments need to be extracted from the user request]
         orchestrator_prompt = f"""
         You are the main Orchestrator for a skate park, shop, events, and maintenance.
         A customer's request is: "{user_request}"
@@ -346,13 +363,11 @@ class Orchestrator(ToolCallingAgent):
         
         TODO: Add two more conditional blocks below following the same pattern:
         
-        - If "{diagnosis}" is "{self.customer_support_agent.possible_categories[4]}" (Event Inquiry):
-            [YOUR GUIDANCE HERE - Guide the LLM on when to use 'list_upcoming_events' vs 'create_new_event']
-            [Consider what information is needed for each tool]
+        - If "{diagnosis}" is "{self.customer_support_agent.possible_categories[4]}" (Event Inquiry),attempt to extract event_name, date, description from {user_request}. If all details are present, you might first check 'create_new_event'. If details are missing, call 'list_upcoming_events' to ask for them.
+
         
-        - If "{diagnosis}" is "{self.customer_support_agent.possible_categories[5]}" (Maintenance Request):
-            [YOUR GUIDANCE HERE - Guide the LLM on when to use 'log_maintenance_request' vs 'view_maintenance_log']
-            [Consider what arguments need to be extracted from the user request]
+        - If "{diagnosis}" is "{self.customer_support_agent.possible_categories[5]}" (Maintenance Request), attempt to extract area, issue_description, reported_by from {user_request}. If all details are present, you might first check 'log_maintenance_request'. If details are missing, call 'view_maintenance_log' to ask for them.
+
         
         If the diagnosis is "{self.customer_support_agent.possible_categories[3]}" (Gear repair), provide a standard helpful response using the 'final_answer' tool: "Regarding your gear concern: Please bring the item to our shop for a detailed assessment, or call us to discuss repair or replacement options."
         If the diagnosis is "{self.customer_support_agent.possible_categories[6]}" (Unknown/General), or if necessary information for other tools is missing and you need to ask for clarification, use the 'final_answer' tool with an appropriate message like: "I'm not entirely sure how to help with that. Could you please rephrase or provide more details?"
