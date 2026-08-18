@@ -105,7 +105,13 @@ def analyze_request_urgency(request: str) -> str:
     Returns:
         str: "urgent" if the request contains urgency indicators, "normal" otherwise.
     """
-    pass
+    chinesestrings = ["紧急", "急需", "立即", "马上", "立刻", "赶快", "尽快", "迫切", "急迫"]
+    englishstrings = ["urgent", "emergency", "immediately", "asap", "right away", "right now"]
+    request = request.lower()    
+    if any(word in request for word in englishstrings) or any(word in request for word in chinesestrings):
+        return "urgent"
+    else:
+        return "normal"
 
 
 @tool
@@ -275,7 +281,14 @@ class UrgencyDetectorAgent(ToolCallingAgent):
         You MUST use the 'analyze_request_urgency' tool with the original request.
         Your final response, using the 'final_answer' tool, MUST be the direct string output ("urgent" or "normal") from the 'analyze_request_urgency' tool's observation.
         """
+        print(f"DEBUG user_request: {user_request!r}")
+
         _ = self.run(prompt)
+
+        for i, step in enumerate(self.memory.steps):
+            print(f"--- DEBUG Step {i}: {type(step).__name__} ---")
+            print(vars(step))  # or dir(step) if vars() errors on some step types
+            
         urgency_assessment = "normal" 
         for step in reversed(self.memory.steps):
             if hasattr(step, 'tool_calls') and step.tool_calls and step.tool_calls[0].name == 'final_answer':
@@ -292,7 +305,8 @@ class ChineseBankPostOfficeAgent(ToolCallingAgent):
     def __init__(self, model_to_use: OpenAIServerModel):
         self.request_analyzer = RequestAnalysisAgent(model_to_use)
         # TODO: Learner Task 3a: Instantiate the UrgencyDetectorAgent
-        self.urgency_detector: Optional[UrgencyDetectorAgent] = None # Placeholder
+        self.urgency_detector=UrgencyDetectorAgent(model_to_use)
+        # self.urgency_detector: Optional[UrgencyDetectorAgent] = None # Placeholder
         
         super().__init__(
             tools=[
@@ -332,6 +346,14 @@ class ChineseBankPostOfficeAgent(ToolCallingAgent):
         #    is_urgent_bool = urgency_level == "urgent"
         #    if is_urgent_bool:
         #        booking_manager.routing_accuracy["urgent_requests_identified_by_llm"] +=1
+        urgency_level = self.urgency_detector.get_llm_urgency_assessment(request)
+        if urgency_level == 'urgent':
+            is_urgent_bool = True
+        else:
+            is_urgent_bool = False
+        if is_urgent_bool:
+            booking_manager.routing_accuracy["urgent_requests_identified_by_llm"] += 1
+        
         print(f"LLM Assessed Urgency: '{urgency_level}' (NEEDS IMPLEMENTATION BY LEARNER)")
         
 
@@ -411,13 +433,13 @@ if __name__ == "__main__":
     print("🏦 Chinese Postal Bank Service Demo - Urgency Exercise Starter 🏦\n")
 
     test_cases = [
-        {"name": "Wang Xiaoming (王小明)", "request": "I need to deposit money into my account. (我需要存一些钱到我的账户。)", "expected_service": "deposit"},
-        {"name": "Li Jiayi (李佳怡)", "request": "I want to send a package to Shanghai. (我想邮寄一个包裹到上海。)", "expected_service": "postal"},
+        #{"name": "Wang Xiaoming (王小明)", "request": "I need to deposit money into my account. (我需要存一些钱到我的账户。)", "expected_service": "deposit"},
+        #{"name": "Li Jiayi (李佳怡)", "request": "I want to send a package to Shanghai. (我想邮寄一个包裹到上海。)", "expected_service": "postal"},
         {"name": "Emergency Customer (紧急客户)", "request": "URGENT! I must transfer money abroad immediately for an emergency! (紧急！我必须立即向国外汇款处理急事！)", "expected_service": "international_transfer"},
-        {"name": "Chen Student (陈学生)", "request": "How do I apply for a student loan? (我该如何申请学生贷款？)", "expected_service": "loan"},
-        {"name": "Zhang Senior (张老先生)", "request": "I need help paying my electricity bill. It's due tomorrow!", "expected_service": "bill_payment"}, 
-        {"name": "Ms. Qian (钱女士)", "request": "I want to transfer money to my son in Canada. (我想给我在加拿大的儿子转账。)", "expected_service": "international_transfer"},
-        {"name": "Mr. Zhao (赵先生)", "request": "What are the business hours for the Beijing branch? (北京分行的营业时间是什么时候？)", "expected_service": "general_inquiry"}
+        #{"name": "Chen Student (陈学生)", "request": "How do I apply for a student loan? (我该如何申请学生贷款？)", "expected_service": "loan"},
+        #{"name": "Zhang Senior (张老先生)", "request": "I need help paying my electricity bill. It's due tomorrow!", "expected_service": "bill_payment"}, 
+        #{"name": "Ms. Qian (钱女士)", "request": "I want to transfer money to my son in Canada. (我想给我在加拿大的儿子转账。)", "expected_service": "international_transfer"},
+        #{"name": "Mr. Zhao (赵先生)", "request": "What are the business hours for the Beijing branch? (北京分行的营业时间是什么时候？)", "expected_service": "general_inquiry"}
     ]
     
     for case in test_cases:
