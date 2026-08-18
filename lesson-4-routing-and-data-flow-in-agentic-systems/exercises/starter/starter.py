@@ -1,3 +1,4 @@
+from PIL import GimpGradientFile
 from typing import Dict, List, Any, Optional
 import os
 import dotenv
@@ -288,7 +289,7 @@ class UrgencyDetectorAgent(ToolCallingAgent):
         for i, step in enumerate(self.memory.steps):
             print(f"--- DEBUG Step {i}: {type(step).__name__} ---")
             print(vars(step))  # or dir(step) if vars() errors on some step types
-            
+
         urgency_assessment = "normal" 
         for step in reversed(self.memory.steps):
             if hasattr(step, 'tool_calls') and step.tool_calls and step.tool_calls[0].name == 'final_answer':
@@ -369,14 +370,13 @@ class ChineseBankPostOfficeAgent(ToolCallingAgent):
         orchestrator_prompt = f"""
         Orchestrator:
         Customer: '{customer_name}', Request: "{request}"
-        Diagnosed Service: '{diagnosed_service_type}'. 
-        {f"ASSESSED URGENCY: '{urgency_level}'." if self.urgency_detector else "Urgency detection not yet integrated."}
+        Diagnosed Service: '{diagnosed_service_type}'. ASSESSED URGENCY: '{urgency_level}'
 
         Task: Call the correct handler tool based on diagnosed_service_type.
-        If the request was assessed as urgent (current assessment: '{urgency_level}'), you MUST pass 'is_urgent': True to the handler tool. Otherwise, pass 'is_urgent': False.
         Your available tools are: 'handle_deposit_request', 'handle_postal_request', 'handle_loan_request', 'handle_bill_payment_request', 'handle_international_transfer_request', 'handle_general_inquiry_request'.
 
-        Pass 'customer_name': '{customer_name}'.
+        You must pass 'urgency_level' value '{is_urgent_bool}' as boolean type, to the handler tool.
+        Also Pass 'customer_name': '{customer_name}'.
         For 'handle_general_inquiry_request', also pass 'original_request': "{request}".
         
         Based on '{diagnosed_service_type}', select and call the appropriate 'handle_*' tool with the correct 'is_urgent' flag.
@@ -434,10 +434,10 @@ if __name__ == "__main__":
 
     test_cases = [
         #{"name": "Wang Xiaoming (王小明)", "request": "I need to deposit money into my account. (我需要存一些钱到我的账户。)", "expected_service": "deposit"},
-        #{"name": "Li Jiayi (李佳怡)", "request": "I want to send a package to Shanghai. (我想邮寄一个包裹到上海。)", "expected_service": "postal"},
+        {"name": "Li Jiayi (李佳怡)", "request": "I want to send a package to Shanghai. (我想邮寄一个包裹到上海。)", "expected_service": "postal"},
         {"name": "Emergency Customer (紧急客户)", "request": "URGENT! I must transfer money abroad immediately for an emergency! (紧急！我必须立即向国外汇款处理急事！)", "expected_service": "international_transfer"},
         #{"name": "Chen Student (陈学生)", "request": "How do I apply for a student loan? (我该如何申请学生贷款？)", "expected_service": "loan"},
-        #{"name": "Zhang Senior (张老先生)", "request": "I need help paying my electricity bill. It's due tomorrow!", "expected_service": "bill_payment"}, 
+        {"name": "Zhang Senior (张老先生)", "request": "I need help paying my electricity bill. It's due tomorrow!", "expected_service": "bill_payment"}, 
         #{"name": "Ms. Qian (钱女士)", "request": "I want to transfer money to my son in Canada. (我想给我在加拿大的儿子转账。)", "expected_service": "international_transfer"},
         #{"name": "Mr. Zhao (赵先生)", "request": "What are the business hours for the Beijing branch? (北京分行的营业时间是什么时候？)", "expected_service": "general_inquiry"}
     ]
